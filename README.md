@@ -68,15 +68,7 @@ def get_day_forecast(city):
         if res.get("cod") != "200":
             return f"❌ Ошибка: {res.get('message')}"
 
-        # Берём данные прогноза (3 часа шаг)
-        # Нам нужны:
-        # 09:00 — утро
-        # 15:00 — день
-        # 21:00 — вечер
-
-        morning = None
-        day = None
-        evening = None
+        morning = day = evening = None
 
         for entry in res["list"]:
             time = entry["dt_txt"]
@@ -88,27 +80,30 @@ def get_day_forecast(city):
             if "21:00:00" in time:
                 evening = entry
 
-        # Если вдруг какого-то времени нет
         if not (morning and day and evening):
             return "⚠ У этого города нет точного прогноза по часам."
 
-        # составляем ответ
+        # БЕЗ отступа между погодой и рекомендацией
+        # ОТСТУП только внизу блока
         def format_block(name, data):
             temp = data["main"]["temp"]
             feels = data["main"]["feels_like"]
             condition = data["weather"][0]["description"].capitalize()
 
-            return f"*{name}:*\n" \
-                   f"🌡 Температура: {temp}°C\n" \
-                   f"🤔 Ощущается как: {feels}°C\n" \
-                   f"☁ Погодa: {condition}\n\n" \
-                   f"👕 {clothes_recommendation(temp)}\n"
+            return (
+                f"*{name}:*\n"
+                f"🌡 Температура: {temp}°C\n"
+                f"🤔 Ощущается как: {feels}°C\n"
+                f"☁ Погодa: {condition}\n"
+                f"👕 {clothes_recommendation(temp)}\n\n"   # ← Отступ ТОЛЬКО здесь
+            )
 
-        # итоговый текст
-        result = f"*Погода в {city.title()} на сегодня*\n\n" \
-                 f"{format_block('Утром', morning)}" \
-                 f"{format_block('Днём', day)}" \
-                 f"{format_block('Вечером', evening)}"
+        result = (
+            f"*Погода в {city.title()} на сегодня*\n\n"
+            f"{format_block('Утром', morning)}"
+            f"{format_block('Днём', day)}"
+            f"{format_block('Вечером', evening)}"
+        )
 
         return result
 
